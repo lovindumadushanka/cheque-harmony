@@ -12,6 +12,9 @@ const badgeVariants = cva(
         secondary: "border-transparent bg-secondary text-secondary-foreground hover:bg-secondary/80",
         destructive: "border-transparent bg-destructive text-destructive-foreground hover:bg-destructive/80",
         outline: "text-foreground",
+        pending: "border-transparent bg-[hsl(var(--status-pending-bg))] text-[hsl(var(--status-pending-foreground))]",
+        cleared: "border-transparent bg-[hsl(var(--status-cleared-bg))] text-[hsl(var(--status-cleared-foreground))]",
+        bounced: "border-transparent bg-[hsl(var(--status-bounced-bg))] text-[hsl(var(--status-bounced-foreground))]",
       },
     },
     defaultVariants: {
