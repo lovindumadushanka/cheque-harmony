@@ -132,4 +132,20 @@
   .status-bounced {
     @apply bg-[hsl(var(--status-bounced-bg))] text-[hsl(var(--status-bounced-foreground))];
   }
+
+  .holiday-alert {
+    @apply rounded-lg border border-[hsl(var(--status-pending)/0.3)] bg-[hsl(var(--status-pending-bg))] p-4;
+  }
+
+  .holiday-alert-title {
+    @apply font-medium text-[hsl(var(--status-pending-foreground))];
+  }
+
+  .holiday-alert-text {
+    @apply text-sm text-[hsl(var(--status-pending-foreground)/0.8)];
+  }
+
+  .holiday-alert-highlight {
+    @apply mt-2 flex items-center gap-2 rounded-md bg-[hsl(var(--status-pending)/0.15)] px-3 py-2;
+  }
 }

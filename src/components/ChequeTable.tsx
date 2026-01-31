@@ -1,6 +1,5 @@
-import { useState } from 'react';
 import { format } from 'date-fns';
-import { MoreHorizontal, Eye, CheckCircle, XCircle, Clock } from 'lucide-react';
+import { MoreHorizontal, Eye, CheckCircle, XCircle, Clock, CalendarOff } from 'lucide-react';
 import { Cheque, ChequeStatus } from '@/types/cheque';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -20,6 +19,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { HolidayIndicator } from '@/components/HolidayIndicator';
 
 interface ChequeTableProps {
   cheques: Cheque[];
@@ -37,7 +37,7 @@ export function ChequeTable({ cheques, onStatusChange, onView }: ChequeTableProp
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('en-US', {
       style: 'currency',
-      currency: 'USD',
+      currency: 'LKR',
     }).format(amount);
   };
 
@@ -51,6 +51,7 @@ export function ChequeTable({ cheques, onStatusChange, onView }: ChequeTableProp
             <TableHead className="font-semibold">Bank</TableHead>
             <TableHead className="font-semibold">Amount</TableHead>
             <TableHead className="font-semibold">Due Date</TableHead>
+            <TableHead className="font-semibold">Reminder Date</TableHead>
             <TableHead className="font-semibold">Branch</TableHead>
             <TableHead className="font-semibold">Status</TableHead>
             <TableHead className="text-right font-semibold">Actions</TableHead>
@@ -60,6 +61,7 @@ export function ChequeTable({ cheques, onStatusChange, onView }: ChequeTableProp
           {cheques.map((cheque) => {
             const status = statusConfig[cheque.status];
             const StatusIcon = status.icon;
+            const isAdjusted = cheque.isHolidayAdjusted && cheque.reminderDate;
             
             return (
               <TableRow key={cheque.id} className="group">
@@ -72,7 +74,29 @@ export function ChequeTable({ cheques, onStatusChange, onView }: ChequeTableProp
                 </TableCell>
                 <TableCell>{cheque.bankName}</TableCell>
                 <TableCell className="font-semibold">{formatCurrency(cheque.amount)}</TableCell>
-                <TableCell>{format(new Date(cheque.dueDate), 'MMM dd, yyyy')}</TableCell>
+                <TableCell>
+                  <span className={isAdjusted ? 'line-through text-muted-foreground' : ''}>
+                    {format(new Date(cheque.dueDate), 'MMM dd, yyyy')}
+                  </span>
+                </TableCell>
+                <TableCell>
+                  {cheque.reminderDate ? (
+                    <div className="space-y-1">
+                      <span className="font-medium">
+                        {format(new Date(cheque.reminderDate), 'MMM dd, yyyy')}
+                      </span>
+                      {isAdjusted && (
+                        <HolidayIndicator
+                          originalDate={new Date(cheque.dueDate)}
+                          reminderDate={new Date(cheque.reminderDate)}
+                          skippedDays={cheque.holidaySkipped || []}
+                        />
+                      )}
+                    </div>
+                  ) : (
+                    <span className="text-muted-foreground">-</span>
+                  )}
+                </TableCell>
                 <TableCell>
                   <span className="text-sm">{cheque.branch}</span>
                 </TableCell>

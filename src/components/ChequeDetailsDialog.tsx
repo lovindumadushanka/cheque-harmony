@@ -1,5 +1,5 @@
 import { format } from 'date-fns';
-import { Building2, Calendar, CreditCard, FileText, MapPin, User } from 'lucide-react';
+import { Building2, Calendar, CreditCard, FileText, MapPin, User, CalendarOff, AlertTriangle } from 'lucide-react';
 import { Cheque, ChequeStatus } from '@/types/cheque';
 import { Badge } from '@/components/ui/badge';
 import {
@@ -25,9 +25,9 @@ export function ChequeDetailsDialog({ cheque, open, onOpenChange }: ChequeDetail
   if (!cheque) return null;
 
   const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('en-US', {
+    return new Intl.NumberFormat('en-LK', {
       style: 'currency',
-      currency: 'USD',
+      currency: 'LKR',
     }).format(amount);
   };
 
@@ -87,10 +87,48 @@ export function ChequeDetailsDialog({ cheque, open, onOpenChange }: ChequeDetail
                 <Calendar className="mt-0.5 h-5 w-5 text-muted-foreground" />
                 <div>
                   <p className="text-sm text-muted-foreground">Due Date</p>
-                  <p className="font-medium">{format(new Date(cheque.dueDate), 'MMM dd, yyyy')}</p>
+                  <p className={cheque.isHolidayAdjusted ? 'font-medium line-through text-muted-foreground' : 'font-medium'}>
+                    {format(new Date(cheque.dueDate), 'MMM dd, yyyy')}
+                  </p>
                 </div>
               </div>
             </div>
+
+            {/* Holiday Adjustment Info */}
+            {cheque.isHolidayAdjusted && cheque.reminderDate && (
+              <div className="holiday-alert">
+                <div className="flex items-start gap-3">
+                  <AlertTriangle className="mt-0.5 h-5 w-5 text-[hsl(var(--status-pending))]" />
+                  <div className="space-y-2">
+                    <p className="holiday-alert-title">Holiday Adjustment Applied</p>
+                    <p className="holiday-alert-text">
+                      The due date falls on a non-working day. Reminder has been adjusted to the next bank working day.
+                    </p>
+                    <div className="flex items-center gap-2 text-sm holiday-alert-text">
+                      <CalendarOff className="h-4 w-4 text-[hsl(var(--status-pending))]" />
+                      <span>Skipped: {cheque.holidaySkipped?.join(', ')}</span>
+                    </div>
+                    <div className="holiday-alert-highlight">
+                      <Calendar className="h-4 w-4 text-[hsl(var(--status-pending))]" />
+                      <span className="font-semibold holiday-alert-title">
+                        Reminder Date: {format(new Date(cheque.reminderDate), 'EEEE, MMM dd, yyyy')}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Show reminder date even if not adjusted */}
+            {!cheque.isHolidayAdjusted && cheque.reminderDate && (
+              <div className="flex items-start gap-3">
+                <Calendar className="mt-0.5 h-5 w-5 text-muted-foreground" />
+                <div>
+                  <p className="text-sm text-muted-foreground">Reminder Date</p>
+                  <p className="font-medium">{format(new Date(cheque.reminderDate), 'EEEE, MMM dd, yyyy')}</p>
+                </div>
+              </div>
+            )}
 
             <div className="flex items-start gap-3">
               <MapPin className="mt-0.5 h-5 w-5 text-muted-foreground" />
