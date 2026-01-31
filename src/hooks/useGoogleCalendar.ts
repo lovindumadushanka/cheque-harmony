@@ -27,14 +27,6 @@ export function useGoogleCalendar(): UseGoogleCalendarReturn {
         return;
       }
 
-      const { data, error } = await supabase.functions.invoke('google-calendar-auth', {
-        body: {},
-        headers: {
-          'Authorization': `Bearer ${session.access_token}`,
-        },
-      });
-
-      // Parse the query params to check for action
       const response = await fetch(
         `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/google-calendar-auth?action=check`,
         {
