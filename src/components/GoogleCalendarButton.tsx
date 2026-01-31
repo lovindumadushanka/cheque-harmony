@@ -1,4 +1,4 @@
-import { Calendar } from 'lucide-react';
+import { Calendar, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import {
@@ -10,7 +10,7 @@ import { useGoogleCalendar } from '@/hooks/useGoogleCalendar';
 import { cn } from '@/lib/utils';
 
 export function GoogleCalendarButton() {
-  const { isConnected, isLoading, isConnecting, connect, disconnect } = useGoogleCalendar();
+  const { isConnected, isLoading, isConnecting, isSyncing, connect, disconnect, syncAllCheques } = useGoogleCalendar();
 
   if (isLoading) {
     return (
@@ -62,6 +62,25 @@ export function GoogleCalendarButton() {
                   <p className="text-xs text-muted-foreground">New cheques will appear in your calendar</p>
                 </div>
               </div>
+              <Button
+                variant="outline"
+                size="sm"
+                className="w-full gap-2"
+                onClick={syncAllCheques}
+                disabled={isSyncing}
+              >
+                {isSyncing ? (
+                  <>
+                    <RefreshCw className="h-4 w-4 animate-spin" />
+                    Syncing...
+                  </>
+                ) : (
+                  <>
+                    <RefreshCw className="h-4 w-4" />
+                    Sync All Cheques Now
+                  </>
+                )}
+              </Button>
               <Button
                 variant="outline"
                 size="sm"
