@@ -7,13 +7,15 @@ import {
   CheckCircle, 
   XCircle,
   Filter,
-  Download
+  Download,
+  CalendarOff
 } from 'lucide-react';
 import { Header } from '@/components/Header';
 import { StatCard } from '@/components/StatCard';
 import { ChequeTable } from '@/components/ChequeTable';
 import { AddChequeDialog } from '@/components/AddChequeDialog';
 import { ChequeDetailsDialog } from '@/components/ChequeDetailsDialog';
+import { UpcomingHolidays } from '@/components/UpcomingHolidays';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
@@ -26,6 +28,7 @@ import {
 import { mockCheques, branches } from '@/data/mockData';
 import { Cheque, ChequeStatus } from '@/types/cheque';
 import { useToast } from '@/hooks/use-toast';
+import { getReminderDate } from '@/lib/sriLankanHolidays';
 
 const Index = () => {
   const [cheques, setCheques] = useState<Cheque[]>(mockCheques);
@@ -88,26 +91,45 @@ const Index = () => {
   };
 
   const handleAddCheque = (newCheque: Omit<Cheque, 'id' | 'createdAt'>) => {
+    // Calculate reminder date based on Sri Lankan holidays
+    const { reminderDate, isAdjusted, skippedDays } = getReminderDate(new Date(newCheque.dueDate));
+    
     const cheque: Cheque = {
       ...newCheque,
       id: Date.now().toString(),
       createdAt: new Date().toISOString(),
+      reminderDate: reminderDate.toISOString(),
+      isHolidayAdjusted: isAdjusted,
+      holidaySkipped: skippedDays,
     };
     setCheques(prev => [cheque, ...prev]);
-    toast({
-      title: 'Cheque Added',
-      description: `${cheque.chequeNumber} has been added successfully.`,
-    });
+    
+    if (isAdjusted) {
+      toast({
+        title: 'Cheque Added with Holiday Adjustment',
+        description: `${cheque.chequeNumber} due date falls on ${skippedDays.join(', ')}. Reminder set for next working day.`,
+      });
+    } else {
+      toast({
+        title: 'Cheque Added',
+        description: `${cheque.chequeNumber} has been added successfully.`,
+      });
+    }
   };
 
   const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('en-US', {
+    return new Intl.NumberFormat('en-LK', {
       style: 'currency',
-      currency: 'USD',
+      currency: 'LKR',
       minimumFractionDigits: 0,
       maximumFractionDigits: 0,
     }).format(amount);
   };
+
+  // Count holiday-adjusted cheques
+  const holidayAdjustedCount = useMemo(() => {
+    return cheques.filter(c => c.isHolidayAdjusted && c.status === 'pending').length;
+  }, [cheques]);
 
   return (
     <div className="min-h-screen bg-background">
@@ -129,7 +151,7 @@ const Index = () => {
         </div>
 
         {/* Statistics Cards */}
-        <div className="mb-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="mb-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
           <StatCard
             title="Total Cheques"
             value={stats.total}
@@ -157,6 +179,13 @@ const Index = () => {
             subtitle={formatCurrency(stats.bouncedAmount)}
             icon={XCircle}
             variant="bounced"
+          />
+          <StatCard
+            title="Holiday Adjusted"
+            value={holidayAdjustedCount}
+            subtitle="Pending reminders shifted"
+            icon={CalendarOff}
+            variant="default"
           />
         </div>
 
@@ -207,24 +236,34 @@ const Index = () => {
           </div>
         </div>
 
-        {/* Cheques Table */}
-        <ChequeTable
-          cheques={filteredCheques}
-          onStatusChange={handleStatusChange}
-          onView={setSelectedCheque}
-        />
+        {/* Main Content Grid */}
+        <div className="grid gap-6 lg:grid-cols-[1fr,300px]">
+          <div className="space-y-6">
+            {/* Cheques Table */}
+            <ChequeTable
+              cheques={filteredCheques}
+              onStatusChange={handleStatusChange}
+              onView={setSelectedCheque}
+            />
 
-        {filteredCheques.length === 0 && (
-          <div className="mt-8 flex flex-col items-center justify-center rounded-xl border border-dashed bg-muted/30 py-12">
-            <FileText className="h-12 w-12 text-muted-foreground/50" />
-            <h3 className="mt-4 text-lg font-medium">No cheques found</h3>
-            <p className="text-sm text-muted-foreground">
-              {searchQuery || statusFilter !== 'all' || branchFilter !== 'all'
-                ? 'Try adjusting your filters'
-                : 'Add your first cheque to get started'}
-            </p>
+            {filteredCheques.length === 0 && (
+              <div className="flex flex-col items-center justify-center rounded-xl border border-dashed bg-muted/30 py-12">
+                <FileText className="h-12 w-12 text-muted-foreground/50" />
+                <h3 className="mt-4 text-lg font-medium">No cheques found</h3>
+                <p className="text-sm text-muted-foreground">
+                  {searchQuery || statusFilter !== 'all' || branchFilter !== 'all'
+                    ? 'Try adjusting your filters'
+                    : 'Add your first cheque to get started'}
+                </p>
+              </div>
+            )}
           </div>
-        )}
+
+          {/* Sidebar */}
+          <div className="hidden lg:block">
+            <UpcomingHolidays />
+          </div>
+        </div>
       </main>
 
       {/* Dialogs */}

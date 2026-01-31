@@ -13,10 +13,25 @@ export interface Cheque {
   branch: string;
   notes?: string;
   createdAt: string;
+  // Reminder fields
+  reminderDate?: string;
+  isHolidayAdjusted?: boolean;
+  holidaySkipped?: string[];
 }
 
 export interface Branch {
   id: string;
   name: string;
   code: string;
+}
+
+export interface ReminderInfo {
+  chequeId: string;
+  chequeNumber: string;
+  originalDueDate: Date;
+  reminderDate: Date;
+  isAdjusted: boolean;
+  skippedDays: string[];
+  amount: number;
+  payeeName: string;
 }
