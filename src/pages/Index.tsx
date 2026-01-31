@@ -8,11 +8,14 @@ import {
   XCircle,
   Filter,
   Download,
-  CalendarOff
+  CalendarOff,
+  LayoutGrid,
+  CalendarDays
 } from 'lucide-react';
 import { Header } from '@/components/Header';
 import { StatCard } from '@/components/StatCard';
 import { ChequeTable } from '@/components/ChequeTable';
+import { ChequeCalendar } from '@/components/ChequeCalendar';
 import { AddChequeDialog } from '@/components/AddChequeDialog';
 import { ChequeDetailsDialog } from '@/components/ChequeDetailsDialog';
 import { UpcomingHolidays } from '@/components/UpcomingHolidays';
@@ -25,6 +28,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { mockCheques, branches } from '@/data/mockData';
 import { Cheque, ChequeStatus } from '@/types/cheque';
 import { useToast } from '@/hooks/use-toast';
@@ -35,6 +39,7 @@ const Index = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<ChequeStatus | 'all'>('all');
   const [branchFilter, setBranchFilter] = useState<string>('all');
+  const [viewMode, setViewMode] = useState<'table' | 'calendar'>('table');
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [selectedCheque, setSelectedCheque] = useState<Cheque | null>(null);
   const { toast } = useToast();
@@ -233,36 +238,63 @@ const Index = () => {
               <Download className="h-4 w-4" />
               Export
             </Button>
+
+            <ToggleGroup
+              type="single"
+              value={viewMode}
+              onValueChange={(value) => value && setViewMode(value as 'table' | 'calendar')}
+              className="border rounded-md"
+            >
+              <ToggleGroupItem value="table" aria-label="Table view" className="gap-2 px-3">
+                <LayoutGrid className="h-4 w-4" />
+                <span className="hidden sm:inline">Table</span>
+              </ToggleGroupItem>
+              <ToggleGroupItem value="calendar" aria-label="Calendar view" className="gap-2 px-3">
+                <CalendarDays className="h-4 w-4" />
+                <span className="hidden sm:inline">Calendar</span>
+              </ToggleGroupItem>
+            </ToggleGroup>
           </div>
         </div>
 
         {/* Main Content Grid */}
-        <div className="grid gap-6 lg:grid-cols-[1fr,300px]">
+        <div className={viewMode === 'calendar' ? '' : 'grid gap-6 lg:grid-cols-[1fr,300px]'}>
           <div className="space-y-6">
-            {/* Cheques Table */}
-            <ChequeTable
-              cheques={filteredCheques}
-              onStatusChange={handleStatusChange}
-              onView={setSelectedCheque}
-            />
+            {/* Cheques View */}
+            {viewMode === 'table' ? (
+              <>
+                <ChequeTable
+                  cheques={filteredCheques}
+                  onStatusChange={handleStatusChange}
+                  onView={setSelectedCheque}
+                />
 
-            {filteredCheques.length === 0 && (
-              <div className="flex flex-col items-center justify-center rounded-xl border border-dashed bg-muted/30 py-12">
-                <FileText className="h-12 w-12 text-muted-foreground/50" />
-                <h3 className="mt-4 text-lg font-medium">No cheques found</h3>
-                <p className="text-sm text-muted-foreground">
-                  {searchQuery || statusFilter !== 'all' || branchFilter !== 'all'
-                    ? 'Try adjusting your filters'
-                    : 'Add your first cheque to get started'}
-                </p>
-              </div>
+                {filteredCheques.length === 0 && (
+                  <div className="flex flex-col items-center justify-center rounded-xl border border-dashed bg-muted/30 py-12">
+                    <FileText className="h-12 w-12 text-muted-foreground/50" />
+                    <h3 className="mt-4 text-lg font-medium">No cheques found</h3>
+                    <p className="text-sm text-muted-foreground">
+                      {searchQuery || statusFilter !== 'all' || branchFilter !== 'all'
+                        ? 'Try adjusting your filters'
+                        : 'Add your first cheque to get started'}
+                    </p>
+                  </div>
+                )}
+              </>
+            ) : (
+              <ChequeCalendar
+                cheques={filteredCheques}
+                onViewCheque={setSelectedCheque}
+              />
             )}
           </div>
 
-          {/* Sidebar */}
-          <div className="hidden lg:block">
-            <UpcomingHolidays />
-          </div>
+          {/* Sidebar - only show in table view */}
+          {viewMode === 'table' && (
+            <div className="hidden lg:block">
+              <UpcomingHolidays />
+            </div>
+          )}
         </div>
       </main>
 

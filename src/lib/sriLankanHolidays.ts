@@ -216,3 +216,18 @@ export function getUpcomingHolidays(count: number = 5): { date: Date; name: stri
     .sort((a, b) => a.date.getTime() - b.date.getTime())
     .slice(0, count);
 }
+
+/**
+ * Check if a date is a bank holiday (convenience wrapper)
+ */
+export function isBankHoliday(date: Date): boolean {
+  return isHoliday(date).isHoliday;
+}
+
+/**
+ * Get the holiday name for a date (returns null if not a holiday)
+ */
+export function getHolidayName(date: Date): string | null {
+  const result = isHoliday(date);
+  return result.isHoliday ? result.holidayName || null : null;
+}
