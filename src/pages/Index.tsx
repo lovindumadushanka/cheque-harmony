@@ -10,7 +10,8 @@ import {
   Download,
   CalendarOff,
   LayoutGrid,
-  CalendarDays
+  CalendarDays,
+  Loader2
 } from 'lucide-react';
 import { Header } from '@/components/Header';
 import { StatCard } from '@/components/StatCard';
@@ -29,20 +30,18 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
-import { mockCheques, branches } from '@/data/mockData';
+import { branches } from '@/data/mockData';
 import { Cheque, ChequeStatus } from '@/types/cheque';
-import { useToast } from '@/hooks/use-toast';
-import { getReminderDate } from '@/lib/sriLankanHolidays';
+import { useCheques } from '@/hooks/useCheques';
 
 const Index = () => {
-  const [cheques, setCheques] = useState<Cheque[]>(mockCheques);
+  const { cheques, isLoading, addCheque, updateStatus } = useCheques();
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<ChequeStatus | 'all'>('all');
   const [branchFilter, setBranchFilter] = useState<string>('all');
   const [viewMode, setViewMode] = useState<'table' | 'calendar'>('table');
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [selectedCheque, setSelectedCheque] = useState<Cheque | null>(null);
-  const { toast } = useToast();
 
   // Calculate statistics
   const stats = useMemo(() => {
@@ -83,43 +82,24 @@ const Index = () => {
     });
   }, [cheques, searchQuery, statusFilter, branchFilter]);
 
-  const handleStatusChange = (id: string, status: ChequeStatus) => {
-    setCheques(prev => 
-      prev.map(cheque => 
-        cheque.id === id ? { ...cheque, status } : cheque
-      )
-    );
-    toast({
-      title: 'Status Updated',
-      description: `Cheque has been marked as ${status}.`,
-    });
+  const handleStatusChange = async (id: string, status: ChequeStatus) => {
+    await updateStatus(id, status);
   };
 
-  const handleAddCheque = (newCheque: Omit<Cheque, 'id' | 'createdAt'>) => {
-    // Calculate reminder date based on Sri Lankan holidays
-    const { reminderDate, isAdjusted, skippedDays } = getReminderDate(new Date(newCheque.dueDate));
-    
-    const cheque: Cheque = {
-      ...newCheque,
-      id: Date.now().toString(),
-      createdAt: new Date().toISOString(),
-      reminderDate: reminderDate.toISOString(),
-      isHolidayAdjusted: isAdjusted,
-      holidaySkipped: skippedDays,
-    };
-    setCheques(prev => [cheque, ...prev]);
-    
-    if (isAdjusted) {
-      toast({
-        title: 'Cheque Added with Holiday Adjustment',
-        description: `${cheque.chequeNumber} due date falls on ${skippedDays.join(', ')}. Reminder set for next working day.`,
-      });
-    } else {
-      toast({
-        title: 'Cheque Added',
-        description: `${cheque.chequeNumber} has been added successfully.`,
-      });
-    }
+  const handleAddCheque = async (newCheque: Omit<Cheque, 'id' | 'createdAt'>) => {
+    const success = await addCheque({
+      chequeNumber: newCheque.chequeNumber,
+      bankName: newCheque.bankName,
+      accountNumber: newCheque.accountNumber,
+      payeeName: newCheque.payeeName,
+      amount: newCheque.amount,
+      issueDate: newCheque.issueDate,
+      dueDate: newCheque.dueDate,
+      status: newCheque.status,
+      branch: newCheque.branch,
+      notes: newCheque.notes,
+    });
+    return success;
   };
 
   const formatCurrency = (amount: number) => {
@@ -135,6 +115,20 @@ const Index = () => {
   const holidayAdjustedCount = useMemo(() => {
     return cheques.filter(c => c.isHolidayAdjusted && c.status === 'pending').length;
   }, [cheques]);
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-background">
+        <Header />
+        <div className="flex items-center justify-center h-[calc(100vh-80px)]">
+          <div className="flex flex-col items-center gap-4">
+            <Loader2 className="h-8 w-8 animate-spin text-primary" />
+            <p className="text-muted-foreground">Loading cheques...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background">
