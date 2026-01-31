@@ -14,7 +14,102 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      cheques: {
+        Row: {
+          account_number: string
+          amount: number
+          bank_name: string
+          branch: string
+          cheque_number: string
+          created_at: string
+          due_date: string
+          google_event_id: string | null
+          holiday_skipped: string[] | null
+          id: string
+          is_holiday_adjusted: boolean | null
+          issue_date: string
+          notes: string | null
+          payee_name: string
+          reminder_date: string | null
+          status: string
+          synced_to_calendar: boolean | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          account_number: string
+          amount: number
+          bank_name: string
+          branch: string
+          cheque_number: string
+          created_at?: string
+          due_date: string
+          google_event_id?: string | null
+          holiday_skipped?: string[] | null
+          id?: string
+          is_holiday_adjusted?: boolean | null
+          issue_date: string
+          notes?: string | null
+          payee_name: string
+          reminder_date?: string | null
+          status?: string
+          synced_to_calendar?: boolean | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          account_number?: string
+          amount?: number
+          bank_name?: string
+          branch?: string
+          cheque_number?: string
+          created_at?: string
+          due_date?: string
+          google_event_id?: string | null
+          holiday_skipped?: string[] | null
+          id?: string
+          is_holiday_adjusted?: boolean | null
+          issue_date?: string
+          notes?: string | null
+          payee_name?: string
+          reminder_date?: string | null
+          status?: string
+          synced_to_calendar?: boolean | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      google_calendar_tokens: {
+        Row: {
+          access_token: string
+          created_at: string
+          expires_at: string
+          id: string
+          refresh_token: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          access_token: string
+          created_at?: string
+          expires_at: string
+          id?: string
+          refresh_token: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          access_token?: string
+          created_at?: string
+          expires_at?: string
+          id?: string
+          refresh_token?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
