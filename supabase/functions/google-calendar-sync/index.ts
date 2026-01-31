@@ -348,6 +348,72 @@ Deno.serve(async (req) => {
       );
     }
 
+    if (action === 'sync-all') {
+      // Get all cheques that haven't been synced to calendar
+      const { data: unsyncedCheques, error: fetchError } = await supabase
+        .from('cheques')
+        .select('*')
+        .eq('user_id', user.id)
+        .or('synced_to_calendar.is.null,synced_to_calendar.eq.false');
+
+      if (fetchError) {
+        throw new Error('Failed to fetch cheques');
+      }
+
+      console.log(`Found ${unsyncedCheques?.length || 0} unsynced cheques`);
+
+      let syncedCount = 0;
+      const errors: string[] = [];
+
+      for (const dbCheque of unsyncedCheques || []) {
+        try {
+          const chequeData: ChequeData = {
+            id: dbCheque.id,
+            cheque_number: dbCheque.cheque_number,
+            bank_name: dbCheque.bank_name,
+            account_number: dbCheque.account_number,
+            payee_name: dbCheque.payee_name,
+            amount: dbCheque.amount,
+            issue_date: dbCheque.issue_date,
+            due_date: dbCheque.due_date,
+            status: dbCheque.status,
+            branch: dbCheque.branch,
+            notes: dbCheque.notes,
+            reminder_date: dbCheque.reminder_date,
+          };
+
+          const eventId = await createCalendarEvent(accessToken, chequeData);
+
+          // Update cheque with event ID
+          await supabase
+            .from('cheques')
+            .update({
+              google_event_id: eventId,
+              synced_to_calendar: true,
+            })
+            .eq('id', dbCheque.id);
+
+          syncedCount++;
+        } catch (e) {
+          const errMsg = e instanceof Error ? e.message : 'Unknown error';
+          console.error(`Failed to sync cheque ${dbCheque.cheque_number}:`, errMsg);
+          errors.push(`${dbCheque.cheque_number}: ${errMsg}`);
+        }
+      }
+
+      console.log(`Synced ${syncedCount} cheques to Google Calendar`);
+
+      return new Response(
+        JSON.stringify({ 
+          success: true, 
+          synced: syncedCount, 
+          total: unsyncedCheques?.length || 0,
+          errors: errors.length > 0 ? errors : undefined 
+        }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
     throw new Error('Invalid action');
   } catch (error: unknown) {
     console.error('Google Calendar Sync Error:', error);
