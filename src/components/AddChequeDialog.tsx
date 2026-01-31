@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { CalendarIcon } from 'lucide-react';
+import { CalendarIcon, Loader2 } from 'lucide-react';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -33,7 +33,7 @@ import { Cheque } from '@/types/cheque';
 interface AddChequeDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onAdd: (cheque: Omit<Cheque, 'id' | 'createdAt'>) => void;
+  onAdd: (cheque: Omit<Cheque, 'id' | 'createdAt'>) => Promise<boolean>;
 }
 
 export function AddChequeDialog({ open, onOpenChange, onAdd }: AddChequeDialogProps) {
@@ -48,38 +48,47 @@ export function AddChequeDialog({ open, onOpenChange, onAdd }: AddChequeDialogPr
   });
   const [issueDate, setIssueDate] = useState<Date>();
   const [dueDate, setDueDate] = useState<Date>();
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (!issueDate || !dueDate) return;
     
-    onAdd({
-      chequeNumber: formData.chequeNumber,
-      bankName: formData.bankName,
-      accountNumber: formData.accountNumber,
-      payeeName: formData.payeeName,
-      amount: parseFloat(formData.amount),
-      issueDate: issueDate.toISOString(),
-      dueDate: dueDate.toISOString(),
-      status: 'pending',
-      branch: formData.branch,
-      notes: formData.notes || undefined,
-    });
+    setIsSubmitting(true);
+    
+    try {
+      const success = await onAdd({
+        chequeNumber: formData.chequeNumber,
+        bankName: formData.bankName,
+        accountNumber: formData.accountNumber,
+        payeeName: formData.payeeName,
+        amount: parseFloat(formData.amount),
+        issueDate: issueDate.toISOString(),
+        dueDate: dueDate.toISOString(),
+        status: 'pending',
+        branch: formData.branch,
+        notes: formData.notes || undefined,
+      });
 
-    // Reset form
-    setFormData({
-      chequeNumber: '',
-      bankName: '',
-      accountNumber: '',
-      payeeName: '',
-      amount: '',
-      branch: '',
-      notes: '',
-    });
-    setIssueDate(undefined);
-    setDueDate(undefined);
-    onOpenChange(false);
+      if (success) {
+        // Reset form
+        setFormData({
+          chequeNumber: '',
+          bankName: '',
+          accountNumber: '',
+          payeeName: '',
+          amount: '',
+          branch: '',
+          notes: '',
+        });
+        setIssueDate(undefined);
+        setDueDate(undefined);
+        onOpenChange(false);
+      }
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -102,6 +111,7 @@ export function AddChequeDialog({ open, onOpenChange, onAdd }: AddChequeDialogPr
                   value={formData.chequeNumber}
                   onChange={(e) => setFormData({ ...formData, chequeNumber: e.target.value })}
                   required
+                  disabled={isSubmitting}
                 />
               </div>
               <div className="space-y-2">
@@ -114,6 +124,7 @@ export function AddChequeDialog({ open, onOpenChange, onAdd }: AddChequeDialogPr
                   value={formData.amount}
                   onChange={(e) => setFormData({ ...formData, amount: e.target.value })}
                   required
+                  disabled={isSubmitting}
                 />
               </div>
             </div>
@@ -127,6 +138,7 @@ export function AddChequeDialog({ open, onOpenChange, onAdd }: AddChequeDialogPr
                   value={formData.payeeName}
                   onChange={(e) => setFormData({ ...formData, payeeName: e.target.value })}
                   required
+                  disabled={isSubmitting}
                 />
               </div>
               <div className="space-y-2">
@@ -137,6 +149,7 @@ export function AddChequeDialog({ open, onOpenChange, onAdd }: AddChequeDialogPr
                   value={formData.accountNumber}
                   onChange={(e) => setFormData({ ...formData, accountNumber: e.target.value })}
                   required
+                  disabled={isSubmitting}
                 />
               </div>
             </div>
@@ -150,6 +163,7 @@ export function AddChequeDialog({ open, onOpenChange, onAdd }: AddChequeDialogPr
                   value={formData.bankName}
                   onChange={(e) => setFormData({ ...formData, bankName: e.target.value })}
                   required
+                  disabled={isSubmitting}
                 />
               </div>
               <div className="space-y-2">
@@ -158,6 +172,7 @@ export function AddChequeDialog({ open, onOpenChange, onAdd }: AddChequeDialogPr
                   value={formData.branch}
                   onValueChange={(value) => setFormData({ ...formData, branch: value })}
                   required
+                  disabled={isSubmitting}
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="Select branch" />
@@ -184,6 +199,7 @@ export function AddChequeDialog({ open, onOpenChange, onAdd }: AddChequeDialogPr
                         'w-full justify-start text-left font-normal',
                         !issueDate && 'text-muted-foreground'
                       )}
+                      disabled={isSubmitting}
                     >
                       <CalendarIcon className="mr-2 h-4 w-4" />
                       {issueDate ? format(issueDate, 'PPP') : 'Select date'}
@@ -209,6 +225,7 @@ export function AddChequeDialog({ open, onOpenChange, onAdd }: AddChequeDialogPr
                         'w-full justify-start text-left font-normal',
                         !dueDate && 'text-muted-foreground'
                       )}
+                      disabled={isSubmitting}
                     >
                       <CalendarIcon className="mr-2 h-4 w-4" />
                       {dueDate ? format(dueDate, 'PPP') : 'Select date'}
@@ -233,14 +250,24 @@ export function AddChequeDialog({ open, onOpenChange, onAdd }: AddChequeDialogPr
                 placeholder="Add any additional notes..."
                 value={formData.notes}
                 onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
+                disabled={isSubmitting}
               />
             </div>
           </div>
           <DialogFooter>
-            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+            <Button type="button" variant="outline" onClick={() => onOpenChange(false)} disabled={isSubmitting}>
               Cancel
             </Button>
-            <Button type="submit">Add Cheque</Button>
+            <Button type="submit" disabled={isSubmitting}>
+              {isSubmitting ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Adding...
+                </>
+              ) : (
+                'Add Cheque'
+              )}
+            </Button>
           </DialogFooter>
         </form>
       </DialogContent>
