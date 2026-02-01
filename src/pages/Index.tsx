@@ -7,7 +7,6 @@ import {
   CheckCircle, 
   XCircle,
   Filter,
-  Download,
   CalendarOff,
   LayoutGrid,
   CalendarDays,
@@ -20,6 +19,7 @@ import { ChequeCalendar } from '@/components/ChequeCalendar';
 import { AddChequeDialog } from '@/components/AddChequeDialog';
 import { ChequeDetailsDialog } from '@/components/ChequeDetailsDialog';
 import { UpcomingHolidays } from '@/components/UpcomingHolidays';
+import { CalendarExportButton } from '@/components/CalendarExportButton';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
@@ -228,10 +228,7 @@ const Index = () => {
               </SelectContent>
             </Select>
 
-            <Button variant="outline" className="gap-2">
-              <Download className="h-4 w-4" />
-              Export
-            </Button>
+            <CalendarExportButton cheques={cheques} />
 
             <ToggleGroup
               type="single"

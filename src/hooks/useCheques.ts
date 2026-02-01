@@ -1,7 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { useChequeCalendarSync } from '@/hooks/useChequeCalendarSync';
 import { Cheque, ChequeStatus } from '@/types/cheque';
 import { getReminderDate } from '@/lib/sriLankanHolidays';
 import { format } from 'date-fns';
@@ -53,7 +52,6 @@ export function useCheques(): UseCheques {
   const [cheques, setCheques] = useState<Cheque[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const { toast } = useToast();
-  const { createChequeWithSync, updateChequeWithSync, deleteChequeWithSync } = useChequeCalendarSync();
 
   const fetchCheques = useCallback(async () => {
     try {
@@ -121,6 +119,7 @@ export function useCheques(): UseCheques {
       };
 
       const chequeData = {
+        user_id: session.user.id,
         cheque_number: chequeInput.chequeNumber,
         bank_name: chequeInput.bankName,
         account_number: chequeInput.accountNumber,
@@ -136,29 +135,9 @@ export function useCheques(): UseCheques {
         holiday_skipped: skippedDays,
       };
 
-      // Try to sync with Google Calendar
-      const syncedCheque = await createChequeWithSync(chequeData);
-      
-      if (syncedCheque) {
-        // Successfully synced - add to local state
-        setCheques(prev => [syncedCheque, ...prev]);
-        
-        if (isAdjusted) {
-          toast({
-            title: 'Cheque Added with Holiday Adjustment',
-            description: `Due date falls on ${skippedDays.join(', ')}. Reminder set for next working day.`,
-          });
-        }
-        return true;
-      }
-
-      // If sync failed (e.g., Google Calendar not connected), save directly to database
       const { data, error } = await supabase
         .from('cheques')
-        .insert({
-          ...chequeData,
-          user_id: session.user.id,
-        })
+        .insert(chequeData)
         .select()
         .single();
 
@@ -175,7 +154,7 @@ export function useCheques(): UseCheques {
       } else {
         toast({
           title: 'Cheque Added',
-          description: 'Cheque has been saved. Connect Google Calendar to sync events.',
+          description: 'Cheque has been saved successfully.',
         });
       }
 
@@ -189,34 +168,16 @@ export function useCheques(): UseCheques {
       });
       return false;
     }
-  }, [toast, createChequeWithSync]);
+  }, [toast]);
 
   const updateStatus = useCallback(async (id: string, status: ChequeStatus): Promise<boolean> => {
     try {
-      const cheque = cheques.find(c => c.id === id);
-      if (!cheque) return false;
-
-      // Update in database
       const { error } = await supabase
         .from('cheques')
         .update({ status })
         .eq('id', id);
 
       if (error) throw error;
-
-      // Try to sync with Google Calendar
-      await updateChequeWithSync(id, {
-        cheque_number: cheque.chequeNumber,
-        bank_name: cheque.bankName,
-        account_number: cheque.accountNumber,
-        payee_name: cheque.payeeName,
-        amount: cheque.amount,
-        issue_date: cheque.issueDate,
-        due_date: cheque.dueDate,
-        status,
-        branch: cheque.branch,
-        notes: cheque.notes,
-      });
 
       // Update local state
       setCheques(prev => 
@@ -238,20 +199,16 @@ export function useCheques(): UseCheques {
       });
       return false;
     }
-  }, [cheques, toast, updateChequeWithSync]);
+  }, [toast]);
 
   const deleteCheque = useCallback(async (id: string): Promise<boolean> => {
     try {
-      // Delete from database
       const { error } = await supabase
         .from('cheques')
         .delete()
         .eq('id', id);
 
       if (error) throw error;
-
-      // Try to delete from Google Calendar
-      await deleteChequeWithSync(id);
 
       // Update local state
       setCheques(prev => prev.filter(c => c.id !== id));
@@ -271,7 +228,7 @@ export function useCheques(): UseCheques {
       });
       return false;
     }
-  }, [toast, deleteChequeWithSync]);
+  }, [toast]);
 
   return {
     cheques,
