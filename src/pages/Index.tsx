@@ -20,6 +20,7 @@ import { AddChequeDialog } from '@/components/AddChequeDialog';
 import { ChequeDetailsDialog } from '@/components/ChequeDetailsDialog';
 import { UpcomingHolidays } from '@/components/UpcomingHolidays';
 import { CalendarExportButton } from '@/components/CalendarExportButton';
+import { GoogleCalendarSync } from '@/components/GoogleCalendarSync';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
@@ -282,7 +283,8 @@ const Index = () => {
 
           {/* Sidebar - only show in table view */}
           {viewMode === 'table' && (
-            <div className="hidden lg:block">
+            <div className="hidden lg:block space-y-6">
+              <GoogleCalendarSync />
               <UpcomingHolidays />
             </div>
           )}
