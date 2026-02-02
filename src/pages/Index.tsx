@@ -281,9 +281,9 @@ const Index = () => {
             )}
           </div>
 
-          {/* Sidebar - only show in table view */}
+          {/* Sidebar */}
           {viewMode === 'table' && (
-            <div className="hidden lg:block space-y-6">
+            <div className="space-y-6">
               <GoogleCalendarSync />
               <UpcomingHolidays />
             </div>
