@@ -158,6 +158,14 @@ export function useCheques(): UseCheques {
         });
       }
 
+      // Trigger calendar sync after adding a cheque
+      try {
+        await supabase.functions.invoke('google-calendar-sync');
+      } catch (e) {
+        // Silent fail - calendar sync is optional
+        console.log('Calendar sync skipped:', e);
+      }
+
       return true;
     } catch (error) {
       console.error('Error adding cheque:', error);
@@ -188,6 +196,13 @@ export function useCheques(): UseCheques {
         title: 'Status Updated',
         description: `Cheque has been marked as ${status}.`,
       });
+
+      // Trigger calendar sync after status change
+      try {
+        await supabase.functions.invoke('google-calendar-sync');
+      } catch (e) {
+        console.log('Calendar sync skipped:', e);
+      }
 
       return true;
     } catch (error) {
