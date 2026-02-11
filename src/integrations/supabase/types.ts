@@ -14,6 +14,30 @@ export type Database = {
   }
   public: {
     Tables: {
+      branches: {
+        Row: {
+          code: string
+          created_at: string
+          id: string
+          name: string
+          user_id: string
+        }
+        Insert: {
+          code: string
+          created_at?: string
+          id?: string
+          name: string
+          user_id: string
+        }
+        Update: {
+          code?: string
+          created_at?: string
+          id?: string
+          name?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       cheques: {
         Row: {
           account_number: string
