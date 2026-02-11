@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider, useAuth } from "@/hooks/useAuth";
 import Index from "./pages/Index";
+import ProfilePage from "./pages/ProfilePage";
 import { AuthPage } from "./pages/AuthPage";
 import NotFound from "./pages/NotFound";
 
@@ -24,6 +25,7 @@ function AppRoutes() {
   return (
     <Routes>
       <Route path="/" element={user ? <Index /> : <AuthPage />} />
+      <Route path="/profile" element={user ? <ProfilePage /> : <AuthPage />} />
       <Route path="*" element={<NotFound />} />
     </Routes>
   );

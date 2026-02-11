@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Building2, Bell, User, LogOut, Settings, UserCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
@@ -22,6 +23,7 @@ interface HeaderProps {
 export function Header({ branches = [], onAddBranch, onRemoveBranch }: HeaderProps) {
   const { user, signOut, isLoading } = useAuth();
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const navigate = useNavigate();
 
   return (
     <>
@@ -63,6 +65,10 @@ export function Header({ branches = [], onAddBranch, onRemoveBranch }: HeaderPro
                       </div>
                     </DropdownMenuLabel>
                     <DropdownMenuSeparator />
+                    <DropdownMenuItem onClick={() => navigate('/profile')}>
+                      <UserCircle className="mr-2 h-4 w-4" />
+                      Profile
+                    </DropdownMenuItem>
                     <DropdownMenuItem onClick={() => setSettingsOpen(true)}>
                       <Settings className="mr-2 h-4 w-4" />
                       Settings
