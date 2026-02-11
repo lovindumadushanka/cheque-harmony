@@ -27,16 +27,16 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
-import { branches } from '@/data/mockData';
-import { Cheque } from '@/types/cheque';
+import { Cheque, Branch } from '@/types/cheque';
 
 interface AddChequeDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onAdd: (cheque: Omit<Cheque, 'id' | 'createdAt'>) => Promise<boolean>;
+  branches: Branch[];
 }
 
-export function AddChequeDialog({ open, onOpenChange, onAdd }: AddChequeDialogProps) {
+export function AddChequeDialog({ open, onOpenChange, onAdd, branches }: AddChequeDialogProps) {
   const [formData, setFormData] = useState({
     chequeNumber: '',
     bankName: '',

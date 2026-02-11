@@ -31,12 +31,13 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
-import { branches } from '@/data/mockData';
 import { Cheque, ChequeStatus } from '@/types/cheque';
 import { useCheques } from '@/hooks/useCheques';
+import { useBranches } from '@/hooks/useBranches';
 
 const Index = () => {
   const { cheques, isLoading, addCheque, updateStatus } = useCheques();
+  const { branches, addBranch, removeBranch } = useBranches();
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<ChequeStatus | 'all'>('all');
   const [branchFilter, setBranchFilter] = useState<string>('all');
@@ -133,7 +134,7 @@ const Index = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      <Header />
+      <Header branches={branches} onAddBranch={addBranch} onRemoveBranch={removeBranch} />
       
       <main className="container mx-auto px-4 py-8 sm:px-6 lg:px-8">
         {/* Page Title */}
@@ -296,6 +297,7 @@ const Index = () => {
         open={isAddDialogOpen}
         onOpenChange={setIsAddDialogOpen}
         onAdd={handleAddCheque}
+        branches={branches}
       />
       
       <ChequeDetailsDialog
