@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
-import { ArrowLeft, Loader2, Save, User } from 'lucide-react';
+import { ArrowLeft, Loader2, Save, User, Moon, Sun, Monitor } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { useTheme } from 'next-themes';
 import { Header } from '@/components/Header';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -21,6 +22,7 @@ import { useProfile, Profile } from '@/hooks/useProfile';
 export default function ProfilePage() {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { theme, setTheme } = useTheme();
   const { profile, isLoading, updateProfile } = useProfile();
   const [form, setForm] = useState<Profile>(profile);
   const [isSaving, setIsSaving] = useState(false);
@@ -144,6 +146,44 @@ export default function ProfilePage() {
                   checked={form.notificationsEnabled}
                   onCheckedChange={v => setForm(prev => ({ ...prev, notificationsEnabled: v }))}
                 />
+              </div>
+
+              <Separator />
+
+              <div className="space-y-3">
+                <div>
+                  <Label className="text-sm font-medium">Appearance</Label>
+                  <p className="text-xs text-muted-foreground">Choose your preferred theme.</p>
+                </div>
+                <div className="flex gap-2">
+                  <Button
+                    variant={theme === 'light' ? 'default' : 'outline'}
+                    size="sm"
+                    className="gap-2"
+                    onClick={() => setTheme('light')}
+                  >
+                    <Sun className="h-4 w-4" />
+                    Light
+                  </Button>
+                  <Button
+                    variant={theme === 'dark' ? 'default' : 'outline'}
+                    size="sm"
+                    className="gap-2"
+                    onClick={() => setTheme('dark')}
+                  >
+                    <Moon className="h-4 w-4" />
+                    Dark
+                  </Button>
+                  <Button
+                    variant={theme === 'system' ? 'default' : 'outline'}
+                    size="sm"
+                    className="gap-2"
+                    onClick={() => setTheme('system')}
+                  >
+                    <Monitor className="h-4 w-4" />
+                    System
+                  </Button>
+                </div>
               </div>
             </CardContent>
           </Card>
